@@ -7,3 +7,5 @@
 /pkg/
 /spec/reports/
 /tmp/
+
+/spec/afas_env.rb
