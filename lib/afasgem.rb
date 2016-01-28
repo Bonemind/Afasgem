@@ -1,6 +1,7 @@
 require "afasgem/version"
 require 'afasgem/configuration'
 require 'afasgem/getconnector'
+require 'afasgem/operators'
 require 'savon'
 require 'nokogiri'
 

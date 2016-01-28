@@ -4,6 +4,7 @@ class Getconnector
 	# Constructor, takes the name of the connector
 	def initialize(name)
 		@connectorname = name
+		@filters = []
 
 		if Afasgem::debug
 			# Build a debug client if the debug flag is set
@@ -89,6 +90,30 @@ class Getconnector
 		return result_array
 	end
 
+	# Adds a filter to the current filter list
+	# Provides a fluent interface
+	def add_filter(field, operator, value)
+		if @filters.size == 0
+			@filters.push([])
+		end
+		@filters.last.push({field: field, operator: operator, value: value})
+		return self
+	end
+	
+	# Adds an OR to the current filter list
+	# Provides a fluent interface
+	def add_or
+		@filters.push([]) if @filters.last && @filters.last.size > 0
+		return self
+	end
+
+	# Clears the filters in place
+	# Provides a fluent interface
+	def clear_filters
+		@filters = []
+		return self
+	end
+
 	# Returns the result as a hash
 	# This includes the type definition
 	def get_result
@@ -119,10 +144,58 @@ class Getconnector
 		}
 
 		message[:skip] = skip if skip
+		filter_string = get_filter_string
+		message[:filtersXml] = filter_string if filter_string
 
 		resp = @client.call(:get_data, message: message)
 		xml_string = resp.hash[:envelope][:body][:get_data_response][:get_data_result]
 		return [xml_string, from_xml(xml_string)]
+	end
+
+	# Returns the filter xml in string format
+	def get_filter_string
+		return nil if @filters.size == 0
+		filters = []
+
+		# Loop over each filtergroup
+		# All conditions in a filtergroup are combined using AND
+		# All filtergroups are combined using OR
+		@filters.each_with_index do |filter, index|
+			fields = []
+
+			# Loop over all conditions in a filter group
+			filter.each do |condition|
+				field = condition[:field]
+				operator = condition[:operator]
+				value = condition[:value]
+
+				# Some filters operate on strings and need wildcards
+				# Transform value if needed
+				case operator
+					when FilterOperators::LIKE
+						value = "%#{value}%"
+					when FilterOperators::STARTS_WITH
+						value = "#{value}%"
+					when FilterOperators::NOT_LIKE
+						value = "%#{value}%"
+					when FilterOperators::NOT_STARTS_WITH
+						value = "#{value}%"
+					when FilterOperators::ENDS_WITH
+						value = "%#{value}"
+					when FilterOperators::NOT_ENDS_WITH
+						value = "%#{value}"
+				end
+
+				# Add this filterstring to filters
+				fields.push("<Field FieldId=\"#{field}\" OperatorType=\"#{operator}\">#{value}</Field>")
+			end
+
+			# Make sure all filtergroups are OR'ed and add them
+			filters.push("<Filter FilterId=\"Filter #{index}\">#{fields.join}</Filter>")
+		end
+
+		# Return the whole filterstring
+		return "<Filters>#{filters.join}</Filters>"
 	end
 
 	# Returns the number of results we want to fetch
@@ -134,6 +207,7 @@ class Getconnector
 	def get_data_from_result(result)
 		return result[:AfasGetConnector][@connectorname.to_sym] || []
 	end
+
 
 	# Source of code below: https://gist.github.com/huy/819999
 	def from_xml(xml_io)
