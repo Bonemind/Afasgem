@@ -111,7 +111,49 @@ All of the above methods provide fluent interfaced, meaning they can be chained.
 conn.take(10).skip(5).next.get_data
 ```
 
+#### Filtering
 
+This gem also wraps the filter functionality of the AFAS api. When adding a filter it is added with an and respective to the filters already in place. To filter using an OR you have to explicitly call `add_or`
+
+```
+# Filter where Field == 'val'
+conn.add_filter('Field', FilterOperators::EQUAL, 'val')
+
+# Filter where Field == 'val' && Field2 == 'val2'
+conn.add_filter('Field', FilterOperators::EQUAL, 'val')
+ .add_filter('Field2', FilterOperators::EQUAL, 'val2')
+
+# Filter where Field == 'val' || Field2 == 'val2'
+conn.add_filter('Field', FilterOperators::EQUAL, 'val')
+ .add_or
+ .add_filter('Field2', FilterOperators::EQUAL, 'val2')
+
+# Filter where (Field == 'val' && Field2 == 'val2') || (Field3 == 'val3')
+conn.add_filter('Field', FilterOperators::EQUAL, 'val')
+ .add_filter('Field2', FilterOperators::EQUAL, 'val2')
+ .add_or
+ .add_filter('Field3', FilterOperators::EQUAL, 'val3')
+```
+
+To clear the filters in place use `clear_filters`
+
+Available operators:
+```
+	EQUAL                                # Value is exactly equal
+	LARGER_OR_EQUAL                      # Value is larger than or equal
+	SMALLER_OR_EQUAL                     # Value is smaller than or equal
+	LARGER_THAN                          # Value is larger than
+	SMALLER_THAN                         # Value is smaller than
+	LIKE                                 # Text contains value
+	NOT_EQUAL                            # Value is not equal
+	EMPTY                                # Field is null
+	NOT_EMPTY                            # Field is not null
+	STARTS_WITH                          # Text starts with
+	NOT_LIKE                             # Text does not contain
+	NOT_STARTS_WITH                      # Text does not start with
+	ENDS_WITH                            # Text ends with
+	NOT_ENDS_WITH                        # Text does not end with
+```
 
 ## Development
 
