@@ -92,9 +92,16 @@ class Getconnector
 
 	# Adds a filter to the current filter list
 	# Provides a fluent interface
-	def add_filter(field, operator, value)
+	def add_filter(field, operator, value = nil)
 		if @filters.size == 0
 			@filters.push([])
+		end
+
+		# Only the EMPTY and NOT_EMPTY filters should accept a nil value
+		if !value
+			unless operator == FilterOperators::EMPTY || operator == FilterOperators::NOT_EMPTY
+				raise ArgumentError.new('Value can only be empty when using FilterOperator::EMPTY or FilterOperator::NOT_EMPTY')
+			end
 		end
 		@filters.last.push({field: field, operator: operator, value: value})
 		return self
@@ -184,6 +191,14 @@ class Getconnector
 						value = "%#{value}"
 					when FilterOperators::NOT_ENDS_WITH
 						value = "%#{value}"
+					when FilterOperators::EMPTY
+						# EMPTY and NOT_EMPTY operators require the filter to be in a different format
+						# This because they take no value
+						fields.push("<Field FieldId=\"#{field}\" OperatorType=\"#{operator}\" />")
+						next
+					when FilterOperators::NOT_EMPTY
+						fields.push("<Field FieldId=\"#{field}\" OperatorType=\"#{operator}\" />")
+						next
 				end
 
 				# Add this filterstring to filters

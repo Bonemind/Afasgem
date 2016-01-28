@@ -8,8 +8,7 @@ describe Getconnector do
 	it 't' do
 		connector = Afasgem.getconnector_factory('Profit_Debtor')
 		connector.add_filter('DebtorId', FilterOperators::EQUAL, 10001)
-		connector.add_or.add_filter('DebtorId', FilterOperators::EQUAL, 10337)
-		puts connector.clear_filters.execute.get_data
+		puts connector.execute.get_data
 	end
 
 	it 'should provide a fluent interface for pagination functionality' do
