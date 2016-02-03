@@ -1,7 +1,7 @@
 require 'savon'
 require 'pp'
-
-	# Source of code below: https://gist.github.com/huy/819999
+require 'pry'
+require 'optparse'
 	def from_xml(xml_io)
 		begin
 			result = Nokogiri::XML(xml_io)
@@ -12,7 +12,7 @@ require 'pp'
 	end
 
 	def xml_node_to_hash(node)
-		# If we are at the root of the document, start the hash 
+		# If we are at the root of the document, start the hash
 		if node.element?
 			result_hash = {}
 			if node.attributes != {}
@@ -56,50 +56,75 @@ require 'pp'
 	end
 
 
-client = Savon.client(wsdl: 'https://profitweb.afasonline.nl/profitservices/DataConnector.asmx?WSDL', basic_auth: ['49329.AgroPro', 'Connector1'])
-x = client.call(:execute, { message: { environmentId: 'O49329AB', userId: '49329.AgroPro', password: 'Connector1', dataID: 'GetXmlSchema', parametersXml: '<Parameters><UpdateConnectorId>PtProject</UpdateConnectorId></Parameters>'} })
-xml = x.hash[:envelope][:body][:execute_response][:execute_result]
-# puts from_xml(xml)[:AfasDataConnector][:ConnectorData][:Schema]
-# puts from_xml(xml)[:AfasDataConnector][:ConnectorData][:Id]
-y = from_xml(xml)[:AfasDataConnector][:ConnectorData][:Schema]
+dataconnector_url = 'https://profitweb.afasonline.nl/profitservices/DataConnector.asmx?WSDL'
+username = nil
+password = nil
+connector_name = nil
+environment_id = nil
 
-arr = from_xml(y)[:schema][:element][:complexType][:sequence][:element][:complexType][:sequence][:element]
-arr.each do |t|
-	comments = t[:complexType][:sequence][:comment]
-
-	fields = t[:complexType][:sequence][:element]
-
-	transformed_fields = fields.map do |el|
-		simpleType = el[:simpleType]
-		type = nil
-		type = simpleType[:restriction][:base] if simpleType
-		[el[:name], el[:nillable], type ]
+OptionParser.new do |opts|
+	opts.on('-u', '--username NAME', 'AFAS username') { |v| username = v }
+	opts.on('-p', '--password PASSWORD', 'AFAS password') { |v| password = v }
+	opts.on('-c', '--connector CONNECTOR', 'Name of the UpdateConnector') { |v| connector_name = v }
+	opts.on('-e', '--environment ENVIRONMENT', 'Name of the environment') { |v| environment_id = v }
+	opts.on_tail("-h", "--help", "Show this message") do
+		puts opts
+		exit
 	end
-	puts t[:name] if transformed_fields.nil? || comments.nil?
-	next if transformed_fields.nil? || comments.nil?
-	merged = transformed_fields.zip(comments)
+end.parse!
 
-	puts '=' * 80
-	puts t[:name]
-	puts '=' * 80
+fail ArgumentError.new('Username is required') unless username
+fail ArgumentError.new('Password is required') unless password
+fail ArgumentError.new('Connector name is required') unless connector_name
+fail ArgumentError.new('Environment name is required') unless environment_id
 
-	merged.each do |entry|
-		# puts entry[1]
-		# fieldData = entry[0]
-		# puts "Field: #{fieldData[0]}  Nillable: #{fieldData[1]} Type: #{fieldData[2] || 'Not defined'}"
-		# puts  "-" * 80
+client = Savon.client(wsdl: dataconnector_url, basic_auth: [username, password])
+x = client.call(:execute, {
+	message: {
+		environmentId: environment_id,
+		userId: username,
+		password: password,
+		dataID: 'GetXmlSchema',
+		parametersXml: "<Parameters><UpdateConnectorId>#{connector_name}</UpdateConnectorId></Parameters>"
+	}
+})
+
+xml = x.hash[:envelope][:body][:execute_response][:execute_result]
+y = from_xml(xml)[:AfasDataConnector][:ConnectorData][:Schema]
+a = Nokogiri::XML(y).remove_namespaces!
+
+main_object_xpath = '//*[@name="Fields" and not(ancestor::*[@name="Objects"])]'
+nested_objects_xpath = '//*[@name="Objects"]/complexType/sequence/*'
+nested_objects_fields_xpath = '*//*[@name="Fields"]/complexType/sequence'
+
+
+# Array of properties of the main object, contains comment and xml element alternating
+main = a.xpath(main_object_xpath)[0].children.children.children
+nested = a.xpath(nested_objects_xpath)
+
+def print_fields(field_array)
+	field_array.each do |el|
+		if el.is_a?(Nokogiri::XML::Comment)
+			puts '-' * 80
+			puts el
+		end
+		if el.is_a?(Nokogiri::XML::Element)
+			puts el.attributes['name'].value
+			puts 'Optional' if el.attributes['nillable']
+		end
 	end
 end
 
+puts '*' * 8
+puts connector_name
+puts '*' * 80
+print_fields(main)
 
-# z = from_xml(y)[:schema][:element][:complexType][:sequence][:element][:complexType][:sequence][:element][0][:complexType][:sequence][:comment]
-# a = from_xml(y)[:schema][:element][:complexType][:sequence][:element][:complexType][:sequence][:element][0][:complexType][:sequence][:element]
-# b = a.map do |el|
-# 	simpleType = el[:simpleType]
-# 	type = nil
-# 	type = simpleType[:restriction][:base] if simpleType
-# 	[el[:name], el[:nillable], type ]
-# end
-# pp a
-# c = b.zip(z)
-# pp from_xml(y)
+nested.each do |el|
+	puts '=' * 80
+	puts el.attributes['name'].value
+	puts '=' * 80
+	fields = el.xpath(nested_objects_fields_xpath).children
+	print_fields(fields)
+end
+
