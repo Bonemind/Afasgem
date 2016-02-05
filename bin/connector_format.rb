@@ -118,18 +118,27 @@ resp = client.call(:execute, {
 xml = resp.hash[:envelope][:body][:execute_response][:execute_result]
 
 
+# Get the schema xml out of the response
 schemaxml = from_xml(xml)[:AfasDataConnector][:ConnectorData][:Schema]
-a = Nokogiri::XML(schemaxml).remove_namespaces!
 
+# Parse it ignoring namespaces. This because we only need the data and will not construct responses from the data
+schema = Nokogiri::XML(schemaxml).remove_namespaces!
+
+# Xpath to get the fields array of the main object
 main_object_xpath = '//*[@name="Fields" and not(ancestor::*[@name="Objects"])]'
+
+# Xpath to get the nested objects
 nested_objects_xpath = '//*[@name="Objects"]/complexType/sequence/*'
+
+# Xpath to get the fields of the nested objects
 nested_objects_fields_xpath = '*//*[@name="Fields"]/complexType/sequence'
 
 
 # Array of properties of the main object, contains comment and xml element alternating
-main = a.xpath(main_object_xpath)[0].children.children.children
-nested = a.xpath(nested_objects_xpath)
+main = schema.xpath(main_object_xpath)[0].children.children.children
+nested = schema.xpath(nested_objects_xpath)
 
+# Prints the fields in a field array
 def print_fields(field_array)
 	field_array.each do |el|
 		if el.is_a?(Nokogiri::XML::Comment)
@@ -143,16 +152,26 @@ def print_fields(field_array)
 	end
 end
 
+# Output the main connector name
 puts '*' * 8
 puts connector_name
 puts '*' * 80
+
+# Output the fields of the main object
 print_fields(main)
 
+# Iterate over nested objects
 nested.each do |el|
+
+	# PRint the name of the nested object
 	puts '=' * 80
 	puts el.attributes['name'].value
 	puts '=' * 80
+
+	# Get the fields for this object
 	fields = el.xpath(nested_objects_fields_xpath).children
+
+	# Print the fields for this object
 	print_fields(fields)
 end
 

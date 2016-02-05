@@ -155,6 +155,19 @@ Available operators:
 	NOT_ENDS_WITH                        # Text does not end with
 ```
 
+## Updateconnector data
+
+To view the fields an updateconnector accepts, there is `bin/connector_format`. This script takes a few params and then lists the fields the passed updateconnector would accept
+
+```
+Usage: connector_format [options]
+ -u, --username NAME              AFAS username
+ -p, --password PASSWORD          AFAS password
+ -c, --connector CONNECTOR        Name of the UpdateConnector
+ -e, --environment ENVIRONMENT    Name of the environment
+ -h, --help                       Show this message
+```
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
