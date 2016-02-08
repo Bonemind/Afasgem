@@ -1,6 +1,7 @@
 require "afasgem/version"
 require 'afasgem/configuration'
 require 'afasgem/getconnector'
+require 'afasgem/updateconnector'
 require 'afasgem/operators'
 require 'savon'
 require 'nokogiri'
@@ -35,6 +36,7 @@ module Afasgem
 
 	# Constructs an updateconnector for the passed connector name
 	def self.updateconnector_factory(name)
+		return UpdateConnector.new(name)
 	end
 
 	# Builds the token xml from the configured token

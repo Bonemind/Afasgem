@@ -5,7 +5,6 @@ class Getconnector
 	def initialize(name)
 		@connectorname = name
 		@filters = []
-
 		if Afasgem::debug
 			# Build a debug client if the debug flag is set
 			@client = Savon.client(
