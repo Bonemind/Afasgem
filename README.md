@@ -168,6 +168,51 @@ Usage: connector_format [options]
  -h, --help                       Show this message
 ```
 
+## Updateconnector
+
+To Actually write data to the AFAS api you can use the `updateconnector_factory`. This factory will return an `UpdateConnector` object that has the following methods:
+```
+# Create a connector for the FbItemArticle updateconnector
+connector = Afasgem.updateconnector_factory('FbItemArticle')
+connector.insert(hash) # Insert data
+connector.update(hash) # Update existing data
+connector.delete(hash) # Delete existing data
+```
+
+The methods all take a hash that represents the object. Keys in this hash are expected to be fieldnames, while their values are treated like the field's values.
+
+```
+hash = { A: 'b', C: 5 } # => <A>b</A><C>5</C>
+```
+
+The wrapping xml is inferred using the updateconnector name and some constrant data.
+
+Some objects accept nested objects as well as the usual fields. Those should be stored in the Objects key of the passed hash.
+
+```
+# <A>b</A><C>5</C>
+# <Objects>
+# <X>
+#    <Element>
+#             <Fields action='someaction'>
+#                     <D>1</D>
+#                     <E>2</E>
+#             </Fields>
+#    </Element>
+# </X>
+# <Y>
+#    <Element>
+#             <Fields action='someaction'>
+#                     <F>3</F>
+#                     <G>4</G>
+#             </Fields>
+#    </Element>
+# </Y>
+# </Objects>
+# etc...
+hash = { A: 'b', C: 5, Objects: { X: { D: 1, E: 2}, Y: { F: 3, G: 4} } 
+```
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
