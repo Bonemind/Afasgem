@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["subhime@gmail.com"]
 
   spec.summary       = %q{A gem that wraps basic afas api functionality}
-  spec.homepage      = "Somepoint"
+  spec.homepage      = "https://github.com/Bonemind/Afasgem"
   spec.license       = "MIT"
 
   # Prevent pushing this gem to RubyGems.org by setting 'allowed_push_host', or
