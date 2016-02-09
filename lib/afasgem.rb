@@ -31,7 +31,7 @@ module Afasgem
 
 	# Constructs a getconnect for the passed connector name
 	def self.getconnector_factory(name)
-		return Getconnector.new(name)
+		return GetConnector.new(name)
 	end
 
 	# Constructs an updateconnector for the passed connector name

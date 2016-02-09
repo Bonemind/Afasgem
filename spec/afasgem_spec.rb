@@ -30,7 +30,13 @@ describe Afasgem do
 
 	it 'should build a getconnector' do
 		connector = Afasgem.getconnector_factory('Profit_Debtor')
-		expect(connector).to be_a(Getconnector)
+		expect(connector).to be_a(GetConnector)
 		expect(connector.instance_variable_get(:@connectorname)).to eq('Profit_Debtor')
+	end
+
+	it 'should build an updateconnector' do
+		connector = Afasgem.updateconnector_factory('FbItemArticle')
+		expect(connector).to be_a(UpdateConnector)
+		expect(connector.instance_variable_get(:@connectorname)).to eq('FbItemArticle')
 	end
 end

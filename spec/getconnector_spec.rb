@@ -3,27 +3,22 @@ require './spec/afas_env.rb'
 require 'pp'
 require 'afasgem/operators'
 
-describe Getconnector do
+describe GetConnector do
 	include_context 'AFASEnv'
-	it 't' do
-		connector = Afasgem.getconnector_factory('Profit_Debtor')
-		connector.add_filter('DebtorId', FilterOperators::EQUAL, 10001)
-		puts connector.execute.get_data
-	end
 
 	it 'should provide a fluent interface for pagination functionality' do
 		connector = Afasgem.getconnector_factory('Profit_Debtor')
-		expect(connector).to be_a(Getconnector)
+		expect(connector).to be_a(GetConnector)
 		connector = connector.take(10)
-		expect(connector).to be_a(Getconnector)
+		expect(connector).to be_a(GetConnector)
 		connector = connector.skip(10)
-		expect(connector).to be_a(Getconnector)
+		expect(connector).to be_a(GetConnector)
 		connector = connector.next
-		expect(connector).to be_a(Getconnector)
+		expect(connector).to be_a(GetConnector)
 		connector = connector.previous
-		expect(connector).to be_a(Getconnector)
+		expect(connector).to be_a(GetConnector)
 		connector = connector.page(5)
-		expect(connector).to be_a(Getconnector)
+		expect(connector).to be_a(GetConnector)
 	end
 
 	it 'should throw an argumenterror when setting less than 1 record per page' do

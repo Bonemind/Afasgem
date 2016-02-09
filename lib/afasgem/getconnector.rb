@@ -1,5 +1,5 @@
 # Implements communication with getconnectors
-class Getconnector
+class GetConnector
 
 	# Constructor, takes the name of the connector
 	def initialize(name)
