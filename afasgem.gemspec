@@ -18,7 +18,7 @@ Gem::Specification.new do |spec|
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  spec.add_dependency 'savon', '>= 2.11.1'
+  spec.add_dependency 'savon', '>= 2.10.0'
   spec.add_dependency 'httpclient'
   spec.add_dependency 'rubyntlm', '~> 0.3.2'
 
